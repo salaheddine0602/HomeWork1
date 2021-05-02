@@ -73,9 +73,9 @@ public class MainActivity extends AppCompatActivity {
         Choices[6] = findViewById(R.id.Upper4);
         Choices[7] = findViewById(R.id.Lower4);
 
-        SetInVisible();
         myFarm = initiallizeAnimals();
         myLevel = createLevel();
+        SetEnablability(true);
         //get the all time high score
         int high = getSavedHighScore();
         TextView Hi = findViewById(R.id.HighestScore);
