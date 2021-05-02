@@ -2,10 +2,12 @@ package com.example.homework1;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
@@ -34,14 +36,33 @@ public class MainActivity extends AppCompatActivity {
     private Animals Winner; //the Winner of each level
     private int level = 1;
     private TextToSpeech Mtts;
+    MediaPlayer welcome;
     private ImageButton[] Choices = new ImageButton[8]; //an array that will contain the buttons
     private int[] Visibles = {2, 3, 4, 6, 8};//the array that has the number of arrays that should be visisble at each level
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.menu);
 
+        welcome =MediaPlayer.create(this, R.raw.backgroundusic);
+        welcome.start();
+
+
+
+
+        //start the game
+
+
+
+
+
+
+    }
+    public void open(View view)
+    {
+        welcome.stop();
+        setContentView(R.layout.activity_main);
         //find all the 8 buttons i already have in my interface.
         Choices[0] = findViewById(R.id.Upper1);
         Choices[1] = findViewById(R.id.Lower1);
@@ -52,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
         Choices[6] = findViewById(R.id.Upper4);
         Choices[7] = findViewById(R.id.Lower4);
 
-        //start the game
         SetInVisible();
         myFarm = initiallizeAnimals();
         myLevel = createLevel();
@@ -60,10 +80,6 @@ public class MainActivity extends AppCompatActivity {
         int high = getSavedHighScore();
         TextView Hi = findViewById(R.id.HighestScore);
         Hi.setText(String.valueOf(high));
-
-
-
-
 
     }
     // Initiallizing all the animals with their sounds,names,and images
@@ -226,6 +242,10 @@ public class MainActivity extends AppCompatActivity {
         if (myLevel == null) {
             SetInVisible();
             SetEnablability(false);
+            welcome =MediaPlayer.create(this, R.raw.backgroundusic);
+            welcome.start();
+            setContentView(R.layout.menu);
+
         }
 
 
@@ -284,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
 }
 
 
