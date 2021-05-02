@@ -2,8 +2,10 @@ package com.example.homework1;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -11,6 +13,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
@@ -20,17 +23,22 @@ import java.util.Objects;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
-    private LinkedList<Animals> myFarm;
-    private LinkedList<Animals> farm;
-    private Animals Winner ;
+
+
+    private static final String SAVED_HIGH_SCORE_INT = "high_score";
+    private LinkedList<Animals> myFarm; //contains all the animals
+    private LinkedList<Animals> myLevel; // contains all the animals in the current level
+    private Animals Winner ; //the Winner of each level
     private int level =1 ;
     private ImageButton [] Choices=new ImageButton[8]; //an array that will contain the buttons
     private int []Visibles ={2,3,4,6,8};//the array that has the number of arrays that should be visisble at each level
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //find all the 8 buttons i already have in my interface.
         Choices[0]=findViewById(R.id.Upper1);
         Choices[1]=findViewById(R.id.Lower1);
         Choices[2]=findViewById(R.id.Upper2);
@@ -40,103 +48,22 @@ public class MainActivity extends AppCompatActivity {
         Choices[6]=findViewById(R.id.Upper4);
         Choices[7]=findViewById(R.id.Lower4);
 
-
-        setinvisible();
+        //start the game
+        SetInVisible();
         myFarm=initiallizeAnimals();
-        farm=createLevel();
+        myLevel=createLevel();
+        //get the all time high score
+        int high=getSavedHighScore();
+        TextView Hi=findViewById(R.id.HighestScore);
+        Hi.setText(String.valueOf(high));
 
-
-
-
-    }
-
-
-    public void PlayGame(View v)
-    {
-        TextView Pnts=findViewById(R.id.CurrentScore);
-
-        int points=Integer.parseInt(Pnts.getText().toString());
-        MediaPlayer status ;
-        if (v.getId()==Winner.getPressed().getId())
-        {
-            status=MediaPlayer.create(this,R.raw.correct);
-            points++;
-
-
-
-        }
-        else
-        {
-            status=MediaPlayer.create(this,R.raw.incorrect);
-            level=0;
-            points--;
-            setinvisible();
-            Log.d("incorrect",""+level);
-
-        }
-        Pnts.setText(String.valueOf(points));
-        status.start();
-        while (status.isPlaying())
-        {
-            ;
-        }
-        level++;
-        farm=createLevel();
-
-
-    }
-    public void setinvisible()
-    {
-        for(int i=0;i<Choices.length;i++)
-        {
-            Choices[i].setVisibility(View.INVISIBLE);
-        }
-    }
-    public LinkedList<Animals> createLevel()
-    {
-
-        LinkedList<Animals> possible=new LinkedList<Animals>() ;
-        LinkedList<Animals> temp = (LinkedList<Animals>)myFarm.clone();
-        Animals result ;
-        int max,min=0 ,random_int;
-
-        for (int i=0;i<Visibles[level-1];i++) {
-            max = temp.size() - 1;
-            random_int= (int)Math.floor(Math.random()*(max-0+1)+0);
-            result = temp.remove(random_int);
-            result.setPressed(Choices[i]);
-            possible.add(result);
-            Choices[i].setImageResource(result.getImage());
-            Choices[i].setVisibility(View.VISIBLE);
-        }
-
-
-        ChooseWinner(possible);
-
-        TextView screen =(TextView)findViewById(R.id.Animal);
-        screen.setText(Winner.getName());
-
-        MediaPlayer sound =MediaPlayer.create(this,Winner.getSound());
-        sound.start();
-        while(sound.isPlaying())
-        {
-            ;
-        }
-
-            return possible;
-    }// function to return the array of all images
-
-
-    public void ChooseWinner(LinkedList<Animals> Possible)
-    {
-        int random_int= (int)Math.floor(Math.random()*((Possible.size()-1)-0+1)+0);
-        Winner=Possible.get(random_int);
-
-    }
 
 
 
 
+    }
+    // Initiallizing all the animals with their sounds,names,and images
+    /************************************************************/
     private LinkedList<Animals> initiallizeAnimals()
     {
         LinkedList<Animals> myAnimals=new LinkedList<Animals>();
@@ -167,18 +94,201 @@ public class MainActivity extends AppCompatActivity {
         return myAnimals;
 
     }
-}
-class Animals
-{
-    private int sound ;
-    private String name;
-    private int image ;
-    ImageButton pressed=null;
-    public Animals(int sound,String name,int image)
+
+    //Set all button to invisible
+    /************************************************************/
+
+    public void SetInVisible()
     {
-        this.sound=sound;
-        this.name=name;
-        this.image=image;
+        for(int i=0;i<Choices.length;i++)
+        {
+            Choices[i].setVisibility(View.INVISIBLE);
+        }
+    }
+    //Set all button to Disable
+    /************************************************************/
+
+    public void SetEnablability(Boolean state)
+    {
+        for(int i=0;i<Choices.length;i++)
+        {
+            Choices[i].setEnabled(state);
+        }
+    }
+    //choose the winnner animal
+    /************************************************************/
+    public void ChooseWinner(LinkedList<Animals> Possible)
+    {
+        int random_int= (int)Math.floor(Math.random()*((Possible.size()-1)-0+1)+0);
+        Winner=Possible.get(random_int);
+        //delete the winner animal to be sure that it will only come once
+        myFarm.remove(Winner);
+
+    }
+
+    //create the level
+    /************************************************************/
+    public LinkedList<Animals> createLevel()
+    {
+        //i used Linked list for their efficiency in deletingelement
+        //i used that property to guarantee that an animal never repeat itself
+
+
+        //Linked list to save the available choices in current level
+        LinkedList<Animals> possible=new LinkedList<Animals>() ;
+        //a temporary List to pick Random animals from
+        LinkedList<Animals> temp = (LinkedList<Animals>)myFarm.clone();
+        //a randomly chosen animal
+        Animals result ;
+
+        if(level==6)
+        {
+            //if levels are finished end game
+            Toast.makeText(this,"No more Levels",Toast.LENGTH_LONG);
+            return null ;
+
+        }
+        int max,min=0 ,random_int;
+
+        for (int i=0;i<Visibles[level-1];i++) {
+            max = temp.size() - 1;
+            random_int= (int)Math.floor(Math.random()*(max-0+1)+0);
+            //used remove to insure animals will not repear in the same level choices
+            result = temp.remove(random_int);
+            //set the buttton that has that animal in it
+            result.setPressed(Choices[i]);
+            possible.add(result);
+            Choices[i].setImageResource(result.getImage());
+            Choices[i].setVisibility(View.VISIBLE);
+        }
+
+        Toast.makeText(this,"Level "+level,Toast.LENGTH_SHORT).show();
+        //send the possible choices to randomly pick one of them
+        ChooseWinner(possible);
+
+        TextView screen =(TextView)findViewById(R.id.Animal);
+        screen.setText(Winner.getName());
+
+        MediaPlayer sound =MediaPlayer.create(this,Winner.getSound());
+        sound.start();
+
+
+        return possible;
+    }
+    //Game player
+    /************************************************************/
+    public void PlayGame(View v)
+    {
+        //Points Textview
+        TextView Pnts=findViewById(R.id.CurrentScore);
+        //Highest score
+        TextView Hi=findViewById(R.id.HighestScore);
+        //Points
+        int points=Integer.parseInt(Pnts.getText().toString());
+        MediaPlayer status ;
+
+        int High=Integer.parseInt(Hi.getText().toString());
+
+        //check if the user pressed the right button
+        if (v.getId()==Winner.getPressed().getId())
+        {
+            status=MediaPlayer.create(this,R.raw.correct);
+            points++;
+            if(points>High)
+            {
+                High=points;
+                saveHighScore(High);
+                Hi.setText(String.valueOf(points));
+            }
+
+
+
+        }
+        else
+        {
+            status=MediaPlayer.create(this,R.raw.incorrect);
+            level=0;
+            points=0;
+            SetInVisible();
+            Log.d("incorrect",""+level);
+
+        }
+        Pnts.setText(String.valueOf(points));
+
+        status.start();
+        while (status.isPlaying())
+        {
+            ;
+        }
+        level++;
+        myLevel=createLevel();
+        if (myLevel==null)
+        {
+            SetInVisible();
+            SetEnablability(false);
+        }
+
+
+
+
+    }
+    private void ReadName(String name)
+    {
+
+    }
+
+    //save High Score
+    /************************************************************/
+    private void saveHighScore(int highScore) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor spe = sp.edit();
+        spe.putInt(SAVED_HIGH_SCORE_INT, highScore);
+        spe.apply();
+    }
+
+    //get High Score
+    /************************************************************/
+    private int getSavedHighScore() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        return sp.getInt(SAVED_HIGH_SCORE_INT, -1);
+    }
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//create a class that contains all the animals cards ,and each animal has a
+//an Image and a sound and a name
+//i used the oop for more efficient way of using the animals
+class Animals {
+    private int sound;
+    private String name;
+    private int image;
+    ImageButton pressed = null;
+
+    public Animals(int sound, String name, int image) {
+        this.sound = sound;
+        this.name = name;
+        this.image = image;
 
     }
 
@@ -205,12 +315,10 @@ class Animals
 
     public boolean FindButton(ImageButton btn) {
 
-    if (pressed==btn)
-    {
-        return true;
-    }
-    else
-        return false;
+        if (pressed == btn) {
+            return true;
+        } else
+            return false;
     }
 
     @Override

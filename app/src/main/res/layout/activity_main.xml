@@ -86,7 +86,7 @@
                 android:layout_centerVertical="true"
                 android:gravity="center_vertical|center_horizontal"
                 android:padding="18dp"
-                android:text="Points"/>
+                android:text="0"/>
         </LinearLayout>
 
     </LinearLayout>
