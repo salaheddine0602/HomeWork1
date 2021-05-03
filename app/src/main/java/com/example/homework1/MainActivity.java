@@ -244,6 +244,7 @@ public class MainActivity extends AppCompatActivity {
         if(levelEnter==3)
         {
             level++;
+            levelEnter=0;
         }
         myLevel = createLevel();
         if (myLevel == null) {
