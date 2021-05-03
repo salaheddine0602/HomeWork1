@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private LinkedList<Animals> myLevel; // contains all the animals in the current level
     private Animals Winner; //the Winner of each level
     private int level = 1;
+    int levelEnter = 0;
     private TextToSpeech Mtts;
     MediaPlayer welcome;
     private ImageButton[] Choices = new ImageButton[8]; //an array that will contain the buttons
@@ -215,17 +216,19 @@ public class MainActivity extends AppCompatActivity {
         //check if the user pressed the right button
         if (v.getId() == Winner.getPressed().getId()) {
             status = MediaPlayer.create(this, R.raw.correct);
+            levelEnter++;
             points++;
             if (points > High) {
                 High = points;
                 saveHighScore(High);
                 Hi.setText(String.valueOf(points));
+
             }
 
 
         } else {
             status = MediaPlayer.create(this, R.raw.incorrect);
-            level = 0;
+            level = 1;
             points = 0;
             SetInVisible();
             Log.d("incorrect", "" + level);
@@ -237,7 +240,11 @@ public class MainActivity extends AppCompatActivity {
         while (status.isPlaying()) {
             ;
         }
-        level++;
+
+        if(levelEnter==3)
+        {
+            level++;
+        }
         myLevel = createLevel();
         if (myLevel == null) {
             SetInVisible();
